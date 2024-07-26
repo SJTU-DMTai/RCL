@@ -5,22 +5,17 @@ import random
 import numpy as np
 from collections import defaultdict
 from multiprocessing import Process, Queue
+import os
 
-def build_index(dataset_name):
-
-    ui_mat = np.loadtxt('data/%s.txt' % dataset_name, dtype=np.int32)
-
-    n_users = ui_mat[:, 0].max()
-    n_items = ui_mat[:, 1].max()
-
-    u2i_index = [[] for _ in range(n_users + 1)]
-    i2u_index = [[] for _ in range(n_items + 1)]
-
-    for ui_pair in ui_mat:
-        u2i_index[ui_pair[0]].append(ui_pair[1])
-        i2u_index[ui_pair[1]].append(ui_pair[0])
-
-    return u2i_index, i2u_index
+SEED = 2
+random.seed(SEED) 
+os.environ['PYTHONHASHSEED']=f'{SEED}'
+np.random.seed(SEED) 
+torch.manual_seed(SEED) 
+torch.cuda.manual_seed(SEED) 
+torch.cuda.manual_seed_all(SEED)
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 # sampler for batch generation
 def random_neq(l, r, s):
@@ -31,19 +26,19 @@ def random_neq(l, r, s):
 
 
 def sample_function(user_train, usernum, itemnum, batch_size, maxlen, result_queue, SEED):
-    def sample(uid):
+    def sample():
 
-        # uid = np.random.randint(1, usernum + 1)
-        while len(user_train[uid]) <= 1: user = np.random.randint(1, usernum + 1)
+        user = np.random.randint(1, usernum + 1)
+        while len(user_train[user]) <= 1: user = np.random.randint(1, usernum + 1)
 
         seq = np.zeros([maxlen], dtype=np.int32)
         pos = np.zeros([maxlen], dtype=np.int32)
         neg = np.zeros([maxlen], dtype=np.int32)
-        nxt = user_train[uid][-1]
+        nxt = user_train[user][-1]
         idx = maxlen - 1
 
-        ts = set(user_train[uid])
-        for i in reversed(user_train[uid][:-1]):
+        ts = set(user_train[user])
+        for i in reversed(user_train[user][:-1]):
             seq[idx] = i
             pos[idx] = nxt
             if nxt != 0: neg[idx] = random_neq(1, itemnum + 1, ts)
@@ -51,18 +46,14 @@ def sample_function(user_train, usernum, itemnum, batch_size, maxlen, result_que
             idx -= 1
             if idx == -1: break
 
-        return (uid, seq, pos, neg)
+        return (user, seq, pos, neg)
 
     np.random.seed(SEED)
-    uids = np.arange(1, usernum+1, dtype=np.int32)
-    counter = 0
     while True:
-        if counter % usernum == 0:
-            np.random.shuffle(uids)
         one_batch = []
         for i in range(batch_size):
-            one_batch.append(sample(uids[counter % usernum]))
-            counter += 1
+            one_batch.append(sample())
+
         result_queue.put(zip(*one_batch))
 
 
@@ -78,7 +69,7 @@ class WarpSampler(object):
                                                       batch_size,
                                                       maxlen,
                                                       self.result_queue,
-                                                      np.random.randint(2e9)
+                                                      1
                                                       )))
             self.processors[-1].daemon = True
             self.processors[-1].start()
