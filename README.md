@@ -29,19 +29,12 @@ tqdm == 4.26.0
 to train:
 
 ```
-python main.py --dataset=ml-1m --train_dir=default --maxlen=200 --dropout_rate=0.2 --device=cuda
+python code/main.py --dataset=ml-1m --train_dir=default --maxlen=200 --dropout_rate=0.2 --device=cuda
 ```
 
 just inference:
 
 ```
-python main.py --device=cuda --dataset=ml-1m --train_dir=default --state_dict_path='ml-1m_default/SASRec.epoch=1000.lr=0.001.layer=2.head=1.hidden=50.maxlen=200.pth' --inference_only=true --maxlen=200
+python code/main.py --device=cuda --dataset=ml-1m --train_dir=default --state_dict_path='ml-1m_default/SASRec.epoch=1000.lr=0.001.layer=2.head=1.hidden=50.maxlen=200.pth' --inference_only=true --maxlen=200
 
-```
-
-output for each run would be slightly random, as negative samples are randomly sampled, here's my output for two consecutive runs:
-
-```
-1st run - test (NDCG@10: 0.5897, HR@10: 0.8190)
-2nd run - test (NDCG@10: 0.5918, HR@10: 0.8225)
 ```
