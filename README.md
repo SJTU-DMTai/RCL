@@ -9,11 +9,11 @@ We apply RCL on two mainstream deep learning-based SR models, and our empirical 
 Please cite our paper if you use this code.
 
 ```
-@article{wang2024rcl,
+@inproceedings{wang2024rcl,
   title={Relative contrastive learning for sequential recommendation
 with similarity-based positive pair selection},
   author={Zhikai Wang, Yanyan Shen, Yinghua Zhang, Zexi Zhang, Li He, Hao Gu and Yichun Li},
-  journal={CIKM},
+  booktitle={CIKM},
   year={2024}
 }
 ```
